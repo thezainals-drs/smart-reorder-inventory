@@ -5,14 +5,38 @@ TODAY.setHours(0,0,0,0);
 
 function parseExpiry(str) {
   if (!str) return null;
+  
+  // Convert whatever Google Sheets sends into a readable text string
+  const s = String(str).trim().toLowerCase();
+  
+  // Fix for standard Google Sheet Date format (YYYY-MM-DD)
+  const mISO = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (mISO) {
+    return new Date(parseInt(mISO[1], 10), parseInt(mISO[2], 10) - 1, parseInt(mISO[3], 10));
+  }
+
+  // Fix if Google Sheets sends a raw spreadsheet number (like 46178)
+  if (/^\d{5}$/.test(s)) {
+    const sheetEpoch = new Date(1899, 11, 30);
+    sheetEpoch.setDate(sheetEpoch.getDate() + parseInt(s, 10));
+    return sheetEpoch;
+  }
+
+  // Fallback checks for word-based dates (like "05 June 2026")
   const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,july:6,jul:6,aug:7,sept:8,sep:8,oct:9,nov:10,dec:11};
-  const s = str.trim().toLowerCase();
+  
   const m1 = s.match(/(\d{1,2})\s+([a-z]+)\s+(\d{4})/);
   if (m1) return new Date(+m1[3], months[m1[2]], +m1[1]);
+  
   const m2 = s.match(/([a-z]+)\s+(\d{4})/);
   if (m2) return new Date(+m2[2], months[m2[1]], 1);
+  
   const m3 = s.match(/(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{2,4})/);
-  if (m3) { const y = m3[3].length===2?2000+parseInt(m3[3]):+m3[3]; return new Date(y,+m3[2]-1,+m3[1]); }
+  if (m3) { 
+    const y = m3[3].length === 2 ? 2000 + parseInt(m3[3], 10) : +m3[3]; 
+    return new Date(y, +m3[2] - 1, +m3[1]); 
+  }
+  
   return null;
 }
 
