@@ -6,47 +6,59 @@ TODAY.setHours(0,0,0,0);
 function parseExpiry(str) {
   if (!str) return null;
   
-  // Convert whatever Google Sheets sends into a readable text string
+  // Clean up the text coming from Google Sheets
   const s = String(str).trim().toLowerCase();
   
-  // Fix for standard Google Sheet Date format (YYYY-MM-DD)
+  // Rule A: If it is already a direct ISO date string from an API (like 2026-06-05T00:00:00.000Z)
+  if (s.includes('t') && !isNaN(Date.parse(s))) {
+    return new Date(s);
+  }
+
+  // Rule B: Standard Google Sheet date format (YYYY-MM-DD)
   const mISO = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
   if (mISO) {
     return new Date(parseInt(mISO[1], 10), parseInt(mISO[2], 10) - 1, parseInt(mISO[3], 10));
   }
 
-  // Fix if Google Sheets sends a raw spreadsheet number (like 46178)
+  // Rule C: Raw spreadsheet number format (like 46178)
   if (/^\d{5}$/.test(s)) {
     const sheetEpoch = new Date(1899, 11, 30);
     sheetEpoch.setDate(sheetEpoch.getDate() + parseInt(s, 10));
     return sheetEpoch;
   }
 
-  // Fallback checks for word-based dates (like "05 June 2026")
+  // Rule D: Word-based dates (like "05 June 2026")
   const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,july:6,jul:6,aug:7,sept:8,sep:8,oct:9,nov:10,dec:11};
-  
   const m1 = s.match(/(\d{1,2})\s+([a-z]+)\s+(\d{4})/);
   if (m1) return new Date(+m1[3], months[m1[2]], +m1[1]);
   
   const m2 = s.match(/([a-z]+)\s+(\d{4})/);
   if (m2) return new Date(+m2[2], months[m2[1]], 1);
   
+  // Rule E: Slash format (like 05/06/2026)
   const m3 = s.match(/(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{2,4})/);
   if (m3) { 
     const y = m3[3].length === 2 ? 2000 + parseInt(m3[3], 10) : +m3[3]; 
     return new Date(y, +m3[2] - 1, +m3[1]); 
   }
   
-  return null;
+  // SAFETY NET: If everything else fails, return the raw text as a fake Date object 
+  // so your table displays the broken text structure instead of a blank space.
+  return { isBroken: true, rawText: str };
 }
 
 function daysUntilExpiry(dateStr) {
   const d = parseExpiry(dateStr);
   if (!d) return null;
+  if (d.isBroken) return d; // If it's a broken format, pass it straight to the badge
   return Math.ceil((d - TODAY) / 86400000);
 }
 
 function expiryBadge(days) {
+  // If the safety net caught a broken data format, show the raw text on screen
+  if (days && days.isBroken) {
+    return { label: "Format: " + days.rawText, color: "#fff", bg: "#7b1fa2" };
+  }
   if (days === null) return { label:"No date", color:"#555", bg:"#1a1a1a" };
   if (days < 0) return { label:"EXPIRED", color:"#ff4444", bg:"#2a0a0a" };
   if (days <= 30) return { label:`${days}d left`, color:"#ff6b35", bg:"#2a1200" };
