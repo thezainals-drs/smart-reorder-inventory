@@ -1,3 +1,4 @@
+cat > /mnt/user-data/outputs/package.json << 'EOF'
 {
   "name": "smart-reorder-inventory",
   "version": "1.0.0",
@@ -9,8 +10,9 @@
   "dependencies": {
     "next": "14.2.3",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
     "google-spreadsheet": "^4.1.2",
     "google-auth-library": "^9.6.3"
   }
 }
+EOF
