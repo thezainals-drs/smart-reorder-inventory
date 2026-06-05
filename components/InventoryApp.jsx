@@ -1,1 +1,0 @@
-cp /mnt/user-data/outputs/inventory.jsx /mnt/user-data/outputs/components/InventoryApp.jsx 2>/dev/null || (mkdir -p /mnt/user-data/outputs/components && cp /mnt/user-data/outputs/inventory.jsx /mnt/user-data/outputs/components/InventoryApp.jsx)
