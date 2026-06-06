@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/pages/index.jsx << 'EOF'
 import { useState, useMemo, useEffect } from "react";
 
 const TODAY = new Date();
