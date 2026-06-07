@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import dynamic from 'next/dynamic';
 
 const TODAY = new Date();
 TODAY.setHours(0,0,0,0);
@@ -46,20 +47,13 @@ function Home() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [sortBy, setSortBy] = useState("expiry");
   const [newProduct, setNewProduct] = useState({category:"Supplement",name:"",code:"",expiry:"",qty:1,label:"",pricing:"Full Price",price:"",soldTo:"",notes:"",status:"available"});
-  
-  // Responsive layout state flag
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Dynamically safely check screen width on the client side
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
     window.addEventListener('resize', handleResize);
     fetchProducts();
-
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -152,17 +146,15 @@ function Home() {
         button:active { opacity:0.7; }
       `}</style>
 
-      {/* Header section */}
+      {/* HEADER */}
       <div style={{background:"#1a1a2e",color:"#f7f4ef",padding:"16px 20px",borderBottom:"4px solid #c8963e"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
-            <div style={{fontSize:"18px",fontWeight:"700",color:"#f7f7f7"}}>⚖️ Smart Reorder</div>
+            <div style={{fontSize:"18px",fontWeight:"700",color:"#f7f4ef"}}>Farah's Skincare and Supplement Inventory</div>
             <div style={{fontSize:"10px",color:"#8a8aaa",letterSpacing:"2px",textTransform:"uppercase",marginTop:"2px"}}>DR's Secret · Avance {saving&&"· Saving..."}</div>
           </div>
           <button onClick={()=>setShowAddForm(!showAddForm)} style={{background:"#c8963e",color:"#fff",border:"none",borderRadius:"8px",padding:"10px 16px",fontSize:"13px",fontWeight:"700",cursor:"pointer",fontFamily:"Georgia,serif"}}>+ Add</button>
         </div>
-        
-        {/* Metric horizontal scroll cards */}
         <div className="fscroll" style={{marginTop:"14px"}}>
           {[[products.filter(p=>p.status!=='sold').reduce((a,p)=>a+p.qty,0),"Units","#c8963e",""],[products.filter(p=>p.category==='Skincare').length,"Skincare","#e879b8","#e879b8"],[products.filter(p=>p.category==='Supplement').length,"Supps","#7a9aef","#7a9aef"],[urgentCount,"Urgent","#ff6b6b","#ff4444"]].map(([n,l,color,border])=>(
             <div key={l} style={{background:"rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px 14px",borderLeft:border?`3px solid ${border}`:"none",minWidth:"85px",flex:"1"}}>
@@ -173,14 +165,14 @@ function Home() {
         </div>
       </div>
 
-      {/* Main product categories navigation layout */}
+      {/* CATEGORY TABS */}
       <div style={{display:"flex",background:"#f0ebe0",borderBottom:"1px solid #e0d8c8"}}>
         {[["all","All"],["Supplement","Supplements"],["Skincare","DR's Secret"]].map(([val,label])=>(
           <button key={val} onClick={()=>setCategoryFilter(val)} style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:categoryFilter===val?"#1a1a2e":"#aaa",background:"transparent",border:"none",borderBottom:categoryFilter===val?"3px solid #c8963e":"3px solid transparent",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
         ))}
       </div>
 
-      {/* Dynamic Filters Configuration Segment */}
+      {/* CONTROLS */}
       <div style={{padding:"12px 16px",background:"#fff",borderBottom:"1px solid #e8e0d0"}}>
         <input style={{width:"100%",border:"1px solid #d0c8b8",borderRadius:"20px",padding:"10px 16px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#faf8f4",marginBottom:"10px"}} placeholder="Search by name or code..." value={search} onChange={e=>setSearch(e.target.value)} />
         <div className="fscroll">
@@ -198,19 +190,17 @@ function Home() {
         </div>
       </div>
 
-      {/* Creation form handling block */}
+      {/* ADD FORM */}
       {showAddForm && (
         <div style={{background:"#1a1a2e",padding:"16px 20px",borderBottom:"2px solid #c8963e"}}>
           <div style={{color:"#c8963e",fontSize:"11px",letterSpacing:"3px",textTransform:"uppercase",marginBottom:"12px"}}>Add New Product</div>
-          
-          {/* Adaptive layout rules for input wrapper structure layout grids */}
-          <div style={{display:"flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap:"10px"}}>
-            <div style={{flex: isMobile ? "1 1 100%" : "1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>Category</label><select style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct.category} onChange={e=>setNewProduct(p=>({...p,category:e.target.value}))}>{CATEGORY_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
-            {[["name","Product Name"],["code","Product Code"],["expiry","Expiry"],["qty","Qty"],["label","Batch Label"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
-              <div key={field} style={{flex: isMobile ? "1 1 100%" : "1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>{label}</label><input style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct[field]} onChange={e=>setNewProduct(p=>({...p,[field]:e.target.value}))} type={field==="qty"?"number":"text"} /></div>
+          <div style={{display:"flex",flexDirection:isMobile?"column":"row",flexWrap:"wrap",gap:"10px"}}>
+            <div style={{flex:isMobile?"1 1 100%":"1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>Category</label><select style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct.category} onChange={e=>setNewProduct(p=>({...p,category:e.target.value}))}>{CATEGORY_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+            {[["name","Product Name"],["code","Product Code"],["expiry","Expiry (DD Mon YYYY)"],["qty","Qty"],["label","Batch Label"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
+              <div key={field} style={{flex:isMobile?"1 1 100%":"1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>{label}</label><input style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct[field]} onChange={e=>setNewProduct(p=>({...p,[field]:e.target.value}))} type={field==="qty"?"number":"text"} /></div>
             ))}
-            <div style={{flex: isMobile ? "1 1 100%" : "1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>Pricing</label><select style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct.pricing} onChange={e=>setNewProduct(p=>({...p,pricing:e.target.value}))}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
-            <div style={{flex: isMobile ? "1 1 100%" : "1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>Status</label><select style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct.status} onChange={e=>setNewProduct(p=>({...p,status:e.target.value}))}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+            <div style={{flex:isMobile?"1 1 100%":"1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>Pricing</label><select style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct.pricing} onChange={e=>setNewProduct(p=>({...p,pricing:e.target.value}))}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+            <div style={{flex:isMobile?"1 1 100%":"1 1 200px"}}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>Status</label><select style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct.status} onChange={e=>setNewProduct(p=>({...p,status:e.target.value}))}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
           </div>
           <div style={{display:"flex",gap:"10px",marginTop:"14px"}}>
             <button onClick={addProduct} style={{background:"#c8963e",color:"#fff",border:"none",padding:"10px 24px",fontSize:"13px",fontWeight:"700",cursor:"pointer",borderRadius:"8px",fontFamily:"Georgia,serif"}}>Save to Google Sheets</button>
@@ -219,16 +209,18 @@ function Home() {
         </div>
       )}
 
-      {/* Main Core Display Segment Switch */}
+      {/* MAIN CONTENT */}
       {loading ? (
         <div style={{textAlign:"center",padding:"60px",color:"#888",fontSize:"14px"}}>Loading from Google Sheets...</div>
       ) : error ? (
-        <div style={{textAlign:"center",padding:"40px",color:"#cc4444",fontSize:"14px"}}>{error}</div>
+        <div style={{textAlign:"center",padding:"40px",color:"#cc4444",fontSize:"14px"}}>
+          {error}
+          <button onClick={fetchProducts} style={{marginLeft:"12px",cursor:"pointer",padding:"6px 12px",borderRadius:"6px",border:"1px solid #cc4444",background:"transparent",color:"#cc4444",fontFamily:"Georgia,serif"}}>Retry</button>
+        </div>
       ) : isMobile ? (
-        /* ========================================================
-           MOBILE CARD VIEW (Rendered exclusively for mobile layout limits)
-           ======================================================== */
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "12px", width: "100%" }}>
+
+        /* MOBILE CARD VIEW */
+        <div style={{display:"flex",flexDirection:"column",gap:"12px",padding:"12px",width:"100%"}}>
           {filtered.length===0 && <div style={{textAlign:"center",padding:"40px",color:"#aaa"}}>No products found.</div>}
           {filtered.map(p => {
             const days = daysUntilExpiry(p.expiry);
@@ -236,7 +228,7 @@ function Home() {
             const borderColor = days!==null&&days<0?"#ff4444":days!==null&&days<=30?"#ff6b35":days!==null&&days<=90?"#f0b429":"#e0d8c8";
             const isEditing = editingId===p.id;
             return (
-              <div key={p.id} style={{background:"#fff",borderRadius:"12px",overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",borderLeft:`4px solid ${borderColor}`,opacity:p.status==='sold'?0.6:1, width:"100%"}}>
+              <div key={p.id} style={{background:"#fff",borderRadius:"12px",overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",borderLeft:`4px solid ${borderColor}`,opacity:p.status==='sold'?0.6:1,width:"100%"}}>
                 <div style={{padding:"12px 14px 8px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"4px",flexWrap:"wrap"}}>
@@ -253,7 +245,6 @@ function Home() {
                     <div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>units</div>
                   </div>
                 </div>
-
                 {isEditing ? (
                   <div style={{padding:"10px 14px",background:"#faf8f4",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
                     {[["expiry","Expiry"],["qty","Qty"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
@@ -273,7 +264,6 @@ function Home() {
                     {p.notes && <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Notes</div><div style={{fontSize:"12px",color:"#888"}}>{p.notes}</div></div>}
                   </div>
                 )}
-
                 <div style={{padding:"8px 14px",display:"flex",gap:"8px",borderTop:"1px solid #f0ebe0"}}>
                   {isEditing ? (
                     <>
@@ -292,11 +282,11 @@ function Home() {
             );
           })}
         </div>
+
       ) : (
-        /* ========================================================
-           DESKTOP TABLE VIEW (Rendered exclusively for desktop setups)
-           ======================================================== */
-        <div style={{overflowX:"auto", width: "100%"}}>
+
+        /* DESKTOP TABLE VIEW */
+        <div style={{overflowX:"auto",width:"100%"}}>
           <table style={{width:"100%",borderCollapse:"collapse",fontSize:"13px"}}>
             <thead>
               <tr>{["Cat","Product","Code","Expiry","Qty","Pricing","Price (RM)","Sold To","Notes","Status","Actions"].map(h=><th key={h} style={{background:"#f0ebe0",padding:"9px 12px",fontSize:"10px",letterSpacing:"2px",textTransform:"uppercase",color:"#888",textAlign:"left",borderBottom:"2px solid #e0d8c8"}}>{h}</th>)}</tr>
@@ -329,7 +319,6 @@ function Home() {
         </div>
       )}
 
-      {/* Persistent global footer display information banner */}
       <div style={{padding:"16px 24px",background:"#f0ebe0",borderTop:"1px solid #e0d8c8",fontSize:"11px",color:"#a09a8f",textAlign:"center"}}>
         🔴 Expired · 🟠 &lt;30d · 🟡 &lt;90d · 🟢 Safe · All changes saved to Google Sheets
       </div>
@@ -337,10 +326,4 @@ function Home() {
   );
 }
 
-import dynamic from 'next/dynamic';
-
-// This forces Next.js to completely disable server-side caching 
-// and evaluate the screen width directly on the phone instantly.
-export default dynamic(() => Promise.resolve(Home), {
-  ssr: false,
-});
+export default dynamic(() => Promise.resolve(Home), { ssr: false });
