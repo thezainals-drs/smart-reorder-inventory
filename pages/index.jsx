@@ -123,7 +123,6 @@ function Home() {
     if (sortBy==='expiry') list.sort((a,b) => (daysUntilExpiry(a.expiry)??9999)-(daysUntilExpiry(b.expiry)??9999));
     if (sortBy==='name') list.sort((a,b) => a.name.localeCompare(b.name));
     if (sortBy==='qty') list.sort((a,b) => b.qty-a.qty);
-    if (sortBy==='category') list.sort((a,b) => a.category.localeCompare(b.category));
     return list;
   }, [products, filter, categoryFilter, search, sortBy]);
 
@@ -183,7 +182,6 @@ function Home() {
               <option value="expiry">Sort: Expiry</option>
               <option value="name">Sort: Name</option>
               <option value="qty">Sort: Qty</option>
-              <option value="category">Sort: Category</option>
             </select>
         </div>
       </div>
