@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(null);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
     check();
@@ -216,6 +216,8 @@ export default function Home() {
         <div style={{textAlign:"center",padding:"60px",color:"#888",fontSize:"14px"}}>Loading from Google Sheets...</div>
       ) : error ? (
         <div style={{textAlign:"center",padding:"40px",color:"#cc4444",fontSize:"14px"}}>{error} <button onClick={fetchProducts} style={{marginLeft:"12px",cursor:"pointer",padding:"6px 12px",borderRadius:"6px",border:"1px solid #cc4444",background:"transparent",color:"#cc4444",fontFamily:"Georgia,serif"}}>Retry</button></div>
+      ) : isMobile === null ? (
+        <div style={{textAlign:"center",padding:"60px",color:"#888",fontSize:"14px"}}>Loading...</div>
       ) : isMobile ? (
 
         /* ── MOBILE CARD VIEW ── */
