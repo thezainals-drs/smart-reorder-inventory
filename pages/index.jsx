@@ -34,7 +34,7 @@ const PRICING_OPTIONS = ["Full Price","PWP","FOC"];
 const STATUS_OPTIONS = ["available","sold","reserved","low"];
 const CATEGORY_OPTIONS = ["Supplement","Skincare"];
 
-export default function Home() {
+function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -336,3 +336,11 @@ export default function Home() {
     </div>
   );
 }
+
+import dynamic from 'next/dynamic';
+
+// This forces Next.js to completely disable server-side caching 
+// and evaluate the screen width directly on the phone instantly.
+export default dynamic(() => Promise.resolve(Home), {
+  ssr: false,
+});
