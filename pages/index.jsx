@@ -46,9 +46,12 @@ export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [sortBy, setSortBy] = useState("expiry");
   const [newProduct, setNewProduct] = useState({category:"Supplement",name:"",code:"",expiry:"",qty:1,label:"",pricing:"Full Price",price:"",soldTo:"",notes:"",status:"available"});
+  
+  // Track mobile layout dynamically
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Fixes mobile device layout scaling rules dynamically
   useEffect(() => {
+    // 1. Force the mobile viewport meta rule injection
     let meta = document.querySelector('meta[name="viewport"]');
     if (!meta) {
       meta = document.createElement('meta');
@@ -57,7 +60,16 @@ export default function Home() {
     }
     meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
     
+    // 2. Add responsive layout listener
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    handleResize(); // run immediately on mount
+    window.addEventListener('resize', handleResize);
     fetchProducts();
+
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   async function fetchProducts() {
@@ -142,20 +154,17 @@ export default function Home() {
     <div style={{minHeight:"100vh",background:"#f7f4ef",fontFamily:"Georgia,serif",color:"#1a1a1a",margin:0,width:"100%"}}>
       <style>{`
         * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
+        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+        
+        /* Forces external NextJS framework wrappers to collapse nicely on phones */
+        #__next, main, header, wrapper { min-width: 100% !important; max-width: 100% !important; overflow-x: hidden !important; }
+        
         .fscroll { display:flex; gap:6px; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; width: 100%; }
         .fscroll::-webkit-scrollbar { display:none; }
         button:active { opacity:0.7; }
-        .card-view { display:none; }
-        .table-view { display:block; }
-        @media (max-width: 768px) {
-          .card-view { display:flex; flex-direction:column; gap:12px; padding:12px; width: 100%; }
-          .table-view { display:none; }
-          .sort-select { display:none; }
-        }
       `}</style>
 
-      {/* Shared Adaptive Header */}
+      {/* Main Top Header Section */}
       <div style={{background:"#1a1a2e",color:"#f7f4ef",padding:"16px 20px",borderBottom:"4px solid #c8963e"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
@@ -174,30 +183,32 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Category Tab Filtration */}
+      {/* Category Selection Tabs */}
       <div style={{display:"flex",background:"#f0ebe0",borderBottom:"1px solid #e0d8c8",overflowX:"auto"}}>
         {[["all","All"],["Supplement","Supplements"],["Skincare","DR's Secret"]].map(([val,label])=>(
           <button key={val} onClick={()=>setCategoryFilter(val)} style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:categoryFilter===val?"#1a1a2e":"#aaa",background:"transparent",border:"none",borderBottom:categoryFilter===val?"3px solid #c8963e":"3px solid transparent",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
         ))}
       </div>
 
-      {/* Global Filter Toolbar */}
+      {/* Control Filter Bar */}
       <div style={{padding:"12px 16px",background:"#fff",borderBottom:"1px solid #e8e0d0"}}>
         <input style={{width:"100%",border:"1px solid #d0c8b8",borderRadius:"20px",padding:"10px 16px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#faf8f4",marginBottom:"10px"}} placeholder="Search by name or code..." value={search} onChange={e=>setSearch(e.target.value)} />
         <div className="fscroll">
           {[["all","All"],["urgent",`Urgent (${urgentCount})`],["available","Available"],["low","Low Stock"],["sold","Sold"]].map(([f,label])=>(
             <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?"#1a1a2e":"#f0ebe0",color:filter===f?"#fff":"#888",border:"none",borderRadius:"20px",padding:"6px 14px",fontSize:"11px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
           ))}
-          <select className="sort-select" style={{border:"1px solid #d0c8b8",borderRadius:"20px",padding:"6px 12px",fontSize:"11px",fontFamily:"Georgia,serif",background:"#f0ebe0",marginLeft:"auto"}} value={sortBy} onChange={e=>setSortBy(e.target.value)}>
-            <option value="expiry">Sort: Expiry</option>
-            <option value="name">Sort: Name</option>
-            <option value="qty">Sort: Qty</option>
-            <option value="category">Sort: Category</option>
-          </select>
+          {!isMobile && (
+            <select style={{border:"1px solid #d0c8b8",borderRadius:"20px",padding:"6px 12px",fontSize:"11px",fontFamily:"Georgia,serif",background:"#f0ebe0",marginLeft:"auto"}} value={sortBy} onChange={e=>setSortBy(e.target.value)}>
+              <option value="expiry">Sort: Expiry</option>
+              <option value="name">Sort: Name</option>
+              <option value="qty">Sort: Qty</option>
+              <option value="category">Sort: Category</option>
+            </select>
+          )}
         </div>
       </div>
 
-      {/* Dynamic Entry Form Wrapper */}
+      {/* Product Submission Input Form */}
       {showAddForm && (
         <div style={{background:"#1a1a2e",padding:"16px 20px",borderBottom:"2px solid #c8963e"}}>
           <div style={{color:"#c8963e",fontSize:"11px",letterSpacing:"3px",textTransform:"uppercase",marginBottom:"12px"}}>Add New Product</div>
@@ -222,112 +233,118 @@ export default function Home() {
         <div style={{textAlign:"center",padding:"40px",color:"#cc4444",fontSize:"14px"}}>{error} <button onClick={fetchProducts} style={{marginLeft:"12px",cursor:"pointer",padding:"6px 12px",borderRadius:"6px",border:"1px solid #cc4444",background:"transparent",color:"#cc4444",fontFamily:"Georgia,serif"}}>Retry</button></div>
       ) : (
         <>
-          {/* MOBILE CARD VIEW */}
-          <div className="card-view">
-            {filtered.length===0 && <div style={{textAlign:"center",padding:"40px",color:"#aaa"}}>No products found.</div>}
-            {filtered.map(p => {
-              const days = daysUntilExpiry(p.expiry);
-              const badge = expiryBadge(days);
-              const borderColor = days!==null&&days<0?"#ff4444":days!==null&&days<=30?"#ff6b35":days!==null&&days<=90?"#f0b429":"#e0d8c8";
-              const isEditing = editingId===p.id;
-              return (
-                <div key={p.id} style={{background:"#fff",borderRadius:"12px",overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",borderLeft:`4px solid ${borderColor}`,opacity:p.status==='sold'?0.6:1}}>
-                  
-                  {/* Card Header */}
-                  <div style={{padding:"12px 14px 8px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                    <div style={{flex:1}}>
-                      <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"4px",flexWrap:"wrap"}}>
-                        <span style={catBadge(p.category)}>{p.category==='Skincare'?'SKIN':'SUPP'}</span>
-                        {p.expiry && <span style={{background:badge.bg,color:badge.color,padding:"2px 7px",borderRadius:"3px",fontSize:"9px",fontWeight:"700"}}>{badge.label}</span>}
-                        <span style={{...statusBadge(p.status),fontSize:"9px"}}>{p.status}</span>
-                      </div>
-                      <div style={{fontSize:"15px",fontWeight:"700",color:"#1a1a2e"}}>{p.name}</div>
-                      {p.label && <div style={{fontSize:"11px",color:"#aaa",marginTop:"2px"}}>{p.label}</div>}
-                      {p.code && <div style={{fontSize:"10px",color:"#aaa",fontFamily:"monospace",marginTop:"2px"}}>{p.code}</div>}
-                    </div>
-                    <div style={{textAlign:"right",marginLeft:"12px"}}>
-                      <div style={{fontSize:"28px",fontWeight:"700",color:p.qty===0?"#cc4444":p.qty<=2?"#f0b429":"#1a1a2e",lineHeight:1}}>{p.qty}</div>
-                      <div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>units</div>
-                    </div>
-                  </div>
-
-                  {/* Inline Form Modification Panel */}
-                  {isEditing ? (
-                    <div style={{padding:"10px 14px",background:"#faf8f4",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
-                      {[["expiry","Expiry"],["qty","Qty"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
-                        <div key={field}>
-                          <div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>{label}</div>
-                          <input style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px 8px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p[field]||""} onChange={e=>updateLocal(p.id,field,field==="qty"?+e.target.value:e.target.value)} type={field==="qty"?"number":"text"} />
+          {isMobile ? (
+            /* ========================================================
+               MOBILE CARD VIEW (Triggered strictly by JS viewport dimensions)
+               ======================================================== */
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "12px", width: "100%" }}>
+              {filtered.length===0 && <div style={{textAlign:"center",padding:"40px",color:"#aaa"}}>No products found.</div>}
+              {filtered.map(p => {
+                const days = daysUntilExpiry(p.expiry);
+                const badge = expiryBadge(days);
+                const borderColor = days!==null&&days<0?"#ff4444":days!==null&&days<=30?"#ff6b35":days!==null&&days<=90?"#f0b429":"#e0d8c8";
+                const isEditing = editingId===p.id;
+                return (
+                  <div key={p.id} style={{background:"#fff",borderRadius:"12px",overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",borderLeft:`4px solid ${borderColor}`,opacity:p.status==='sold'?0.6:1}}>
+                    
+                    {/* Card Content Top Layout */}
+                    <div style={{padding:"12px 14px 8px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                      <div style={{flex:1}}>
+                        <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"4px",flexWrap:"wrap"}}>
+                          <span style={catBadge(p.category)}>{p.category==='Skincare'?'SKIN':'SUPP'}</span>
+                          {p.expiry && <span style={{background:badge.bg,color:badge.color,padding:"2px 7px",borderRadius:"3px",fontSize:"9px",fontWeight:"700"}}>{badge.label}</span>}
+                          <span style={{...statusBadge(p.status),fontSize:"9px"}}>{p.status}</span>
                         </div>
-                      ))}
-                      <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>Pricing</div><select style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p.pricing} onChange={e=>updateLocal(p.id,"pricing",e.target.value)}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
-                      <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>Status</div><select style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p.status} onChange={e=>updateLocal(p.id,"status",e.target.value)}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div style={{fontSize:"15px",fontWeight:"700",color:"#1a1a2e"}}>{p.name}</div>
+                        {p.label && <div style={{fontSize:"11px",color:"#aaa",marginTop:"2px"}}>{p.label}</div>}
+                        {p.code && <div style={{fontSize:"10px",color:"#aaa",fontFamily:"monospace",marginTop:"2px"}}>{p.code}</div>}
+                      </div>
+                      <div style={{textAlign:"right",marginLeft:"12px"}}>
+                        <div style={{fontSize:"28px",fontWeight:"700",color:p.qty===0?"#cc4444":p.qty<=2?"#f0b429":"#1a1a2e",lineHeight:1}}>{p.qty}</div>
+                        <div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>units</div>
+                      </div>
                     </div>
-                  ) : (
-                    <div style={{padding:"8px 14px",background:"#faf8f4",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px"}}>
-                      <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Expiry</div><div style={{fontSize:"12px",color:"#555"}}>{p.expiry||"—"}</div></div>
-                      <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Price</div><div style={{fontSize:"12px",color:"#1a1a2e",fontWeight:"600"}}>{p.price?`RM ${p.price}`:"—"}</div></div>
-                      <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Pricing</div><div style={{fontSize:"12px",color:p.pricing==="PWP"?"#c8963e":p.pricing==="FOC"?"#5a9a5a":"#555"}}>{p.pricing}</div></div>
-                      {p.notes && <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Notes</div><div style={{fontSize:"12px",color:"#888"}}>{p.notes}</div></div>}
-                    </div>
-                  )}
 
-                  {/* Actions Bar */}
-                  <div style={{padding:"8px 14px",display:"flex",gap:"8px",borderTop:"1px solid #f0ebe0"}}>
+                    {/* Modification Panel Details */}
                     {isEditing ? (
-                      <>
-                        <button onClick={()=>saveEdit(p)} style={{flex:1,background:"#4caf7d",border:"none",color:"#fff",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>✓ Save</button>
-                        <button onClick={()=>setEditingId(null)} style={{flex:1,background:"transparent",border:"1px solid #ddd",color:"#888",borderRadius:"8px",padding:"8px",fontSize:"12px",cursor:"pointer",fontFamily:"Georgia,serif"}}>Cancel</button>
-                      </>
+                      <div style={{padding:"10px 14px",background:"#faf8f4",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
+                        {[["expiry","Expiry"],["qty","Qty"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
+                          <div key={field}>
+                            <div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>{label}</div>
+                            <input style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px 8px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p[field]||""} onChange={e=>updateLocal(p.id,field,field==="qty"?+e.target.value:e.target.value)} type={field==="qty"?"number":"text"} />
+                          </div>
+                        ))}
+                        <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>Pricing</div><select style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p.pricing} onChange={e=>updateLocal(p.id,"pricing",e.target.value)}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>Status</div><select style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p.status} onChange={e=>updateLocal(p.id,"status",e.target.value)}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+                      </div>
                     ) : (
-                      <>
-                        <button onClick={()=>setEditingId(p.id)} style={{flex:1,background:"transparent",border:"1px solid #c8963e",color:"#c8963e",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>Edit</button>
-                        <button onClick={()=>markSold(p)} style={{flex:2,background:"#5a9a5a",border:"none",color:"#fff",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>Mark Sold</button>
-                        <button onClick={()=>deleteProduct(p)} style={{background:"transparent",border:"1px solid #cc4444",color:"#cc4444",borderRadius:"8px",padding:"8px 10px",fontSize:"12px",cursor:"pointer",fontFamily:"Georgia,serif"}}>✕</button>
-                      </>
+                      <div style={{padding:"8px 14px",background:"#faf8f4",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px"}}>
+                        <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Expiry</div><div style={{fontSize:"12px",color:"#555"}}>{p.expiry||"—"}</div></div>
+                        <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Price</div><div style={{fontSize:"12px",color:"#1a1a2e",fontWeight:"600"}}>{p.price?`RM ${p.price}`:"—"}</div></div>
+                        <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Pricing</div><div style={{fontSize:"12px",color:p.pricing==="PWP"?"#c8963e":p.pricing==="FOC"?"#5a9a5a":"#555"}}>{p.pricing}</div></div>
+                        {p.notes && <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Notes</div><div style={{fontSize:"12px",color:"#888"}}>{p.notes}</div></div>}
+                      </div>
                     )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
 
-          {/* DESKTOP TABLE VIEW */}
-          <div className="table-view" style={{overflowX:"auto"}}>
-            <table style={{width:"100%",borderCollapse:"collapse",fontSize:"13px"}}>
-              <thead>
-                <tr>{["Cat","Product","Code","Expiry","Qty","Pricing","Price (RM)","Sold To","Notes","Status","Actions"].map(h=><th key={h} style={{background:"#f0ebe0",padding:"9px 12px",fontSize:"10px",letterSpacing:"2px",textTransform:"uppercase",color:"#888",textAlign:"left",borderBottom:"2px solid #e0d8c8"}}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {filtered.map(p => {
-                  const days = daysUntilExpiry(p.expiry);
-                  const badge = expiryBadge(days);
-                  const isEditing = editingId===p.id;
-                  const rowBg = p.status==="sold"?{background:"#f9f9f7",opacity:0.6}:days!==null&&days<0?{background:"#fff5f5"}:days!==null&&days<=30?{background:"#fff9f0"}:days!==null&&days<=90?{background:"#fffdf5"}:{};
-                  return (
-                    <tr key={p.id} style={rowBg}>
-                      <td style={td}><span style={catBadge(p.category)}>{p.category==='Skincare'?'SKIN':'SUPP'}</span></td>
-                      <td style={td}><div style={{fontWeight:"600",color:"#1a1a2e"}}>{p.name}</div>{p.label&&<div style={{fontSize:"11px",color:"#aaa",marginTop:"2px"}}>{p.label}</div>}</td>
-                      <td style={td}><span style={{fontSize:"11px",color:"#888",fontFamily:"monospace"}}>{p.code||"—"}</span></td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"120px"}} value={p.expiry||""} onChange={e=>updateLocal(p.id,"expiry",e.target.value)} />:<div><div style={{fontSize:"12px",color:"#555",marginBottom:"3px"}}>{p.expiry||"—"}</div>{p.expiry&&<span style={{background:badge.bg,color:badge.color,padding:"2px 7px",borderRadius:"3px",fontSize:"10px",fontWeight:"700",display:"inline-block"}}>{badge.label}</span>}</div>}</td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"55px"}} type="number" value={p.qty} onChange={e=>updateLocal(p.id,"qty",+e.target.value)} />:<span style={{fontSize:"17px",fontWeight:"700",color:p.qty===0?"#cc4444":p.qty<=2?"#f0b429":"#1a1a2e"}}>{p.qty}</span>}</td>
-                      <td style={td}>{isEditing?<select style={sel} value={p.pricing} onChange={e=>updateLocal(p.id,"pricing",e.target.value)}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>:<span style={{fontSize:"11px",color:p.pricing==="FOC"?"#5a9a5a":p.pricing==="PWP"?"#c8963e":"#555",fontWeight:"600"}}>{p.pricing}</span>}</td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"75px"}} value={p.price||""} onChange={e=>updateLocal(p.id,"price",e.target.value)} />:<span>{p.price?`RM ${p.price}`:"—"}</span>}</td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"110px"}} value={p.soldTo||""} onChange={e=>updateLocal(p.id,"soldTo",e.target.value)} />:<span style={{color:"#555",fontSize:"12px"}}>{p.soldTo||"—"}</span>}</td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"140px"}} value={p.notes||""} onChange={e=>updateLocal(p.id,"notes",e.target.value)} />:<span style={{color:"#888",fontSize:"11px"}}>{p.notes||"—"}</span>}</td>
-                      <td style={td}>{isEditing?<select style={sel} value={p.status} onChange={e=>updateLocal(p.id,"status",e.target.value)}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>:<span style={statusBadge(p.status)}>{p.status}</span>}</td>
-                      <td style={td}>{isEditing?<><button style={ab("#4caf7d")} onClick={()=>saveEdit(p)}>✓ Save</button><button style={ab("#888")} onClick={()=>setEditingId(null)}>Cancel</button></>:<><button style={ab("#c8963e")} onClick={()=>setEditingId(p.id)}>Edit</button><button style={ab("#5a9a5a")} onClick={()=>markSold(p)}>Sold</button><button style={ab("#cc4444")} onClick={()=>deleteProduct(p)}>✕</button></>}</td>
-                    </tr>
-                  );
-                })}
-                {filtered.length===0&&<tr><td colSpan={11} style={{textAlign:"center",padding:"40px",color:"#aaa"}}>No products found.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+                    {/* Operational Action Footer */}
+                    <div style={{padding:"8px 14px",display:"flex",gap:"8px",borderTop:"1px solid #f0ebe0"}}>
+                      {isEditing ? (
+                        <>
+                          <button onClick={()=>saveEdit(p)} style={{flex:1,background:"#4caf7d",border:"none",color:"#fff",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>✓ Save</button>
+                          <button onClick={()=>setEditingId(null)} style={{flex:1,background:"transparent",border:"1px solid #ddd",color:"#888",borderRadius:"8px",padding:"8px",fontSize:"12px",cursor:"pointer",fontFamily:"Georgia,serif"}}>Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={()=>setEditingId(p.id)} style={{flex:1,background:"transparent",border:"1px solid #c8963e",color:"#c8963e",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>Edit</button>
+                          <button onClick={()=>markSold(p)} style={{flex:2,background:"#5a9a5a",border:"none",color:"#fff",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>Mark Sold</button>
+                          <button onClick={()=>deleteProduct(p)} style={{background:"transparent",border:"1px solid #cc4444",color:"#cc4444",borderRadius:"8px",padding:"8px 10px",fontSize:"12px",cursor:"pointer",fontFamily:"Georgia,serif"}}>✕</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* ========================================================
+               DESKTOP TABLE VIEW (Rendered strictly on widescreen viewports)
+               ======================================================== */
+            <div style={{overflowX:"auto", width: "100%"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:"13px"}}>
+                <thead>
+                  <tr>{["Cat","Product","Code","Expiry","Qty","Pricing","Price (RM)","Sold To","Notes","Status","Actions"].map(h=><th key={h} style={{background:"#f0ebe0",padding:"9px 12px",fontSize:"10px",letterSpacing:"2px",textTransform:"uppercase",color:"#888",textAlign:"left",borderBottom:"2px solid #e0d8c8"}}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {filtered.map(p => {
+                    const days = daysUntilExpiry(p.expiry);
+                    const badge = expiryBadge(days);
+                    const isEditing = editingId===p.id;
+                    const rowBg = p.status==="sold"?{background:"#f9f9f7",opacity:0.6}:days!==null&&days<0?{background:"#fff5f5"}:days!==null&&days<=30?{background:"#fff9f0"}:days!==null&&days<=90?{background:"#fffdf5"}:{};
+                    return (
+                      <tr key={p.id} style={rowBg}>
+                        <td style={td}><span style={catBadge(p.category)}>{p.category==='Skincare'?'SKIN':'SUPP'}</span></td>
+                        <td style={td}><div style={{fontWeight:"600",color:"#1a1a2e"}}>{p.name}</div>{p.label&&<div style={{fontSize:"11px",color:"#aaa",marginTop:"2px"}}>{p.label}</div>}</td>
+                        <td style={td}><span style={{fontSize:"11px",color:"#888",fontFamily:"monospace"}}>{p.code||"—"}</span></td>
+                        <td style={td}>{isEditing?<input style={{...inp,width:"120px"}} value={p.expiry||""} onChange={e=>updateLocal(p.id,"expiry",e.target.value)} />:<div><div style={{fontSize:"12px",color:"#555",marginBottom:"3px"}}>{p.expiry||"—"}</div>{p.expiry&&<span style={{background:badge.bg,color:badge.color,padding:"2px 7px",borderRadius:"3px",fontSize:"10px",fontWeight:"700",display:"inline-block"}}>{badge.label}</span>}</div>}</td>
+                        <td style={td}>{isEditing?<input style={{...inp,width:"55px"}} type="number" value={p.qty} onChange={e=>updateLocal(p.id,"qty",+e.target.value)} />:<span style={{fontSize:"17px",fontWeight:"700",color:p.qty===0?"#cc4444":p.qty<=2?"#f0b429":"#1a1a2e"}}>{p.qty}</span>}</td>
+                        <td style={td}>{isEditing?<select style={sel} value={p.pricing} onChange={e=>updateLocal(p.id,"pricing",e.target.value)}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>:<span style={{fontSize:"11px",color:p.pricing==="FOC"?"#5a9a5a":p.pricing==="PWP"?"#c8963e":"#555",fontWeight:"600"}}>{p.pricing}</span>}</td>
+                        <td style={td}>{isEditing?<input style={{...inp,width:"75px"}} value={p.price||""} onChange={e=>updateLocal(p.id,"price",e.target.value)} />:<span>{p.price?`RM ${p.price}`:"—"}</span>}</td>
+                        <td style={td}>{isEditing?<input style={{...inp,width:"110px"}} value={p.soldTo||""} onChange={e=>updateLocal(p.id,"soldTo",e.target.value)} />:<span style={{color:"#555",fontSize:"12px"}}>{p.soldTo||"—"}</span>}</td>
+                        <td style={td}>{isEditing?<input style={{...inp,width:"140px"}} value={p.notes||""} onChange={e=>updateLocal(p.id,"notes",e.target.value)} />:<span style={{color:"#888",fontSize:"11px"}}>{p.notes||"—"}</span>}</td>
+                        <td style={td}>{isEditing?<select style={sel} value={p.status} onChange={e=>updateLocal(p.id,"status",e.target.value)}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>:<span style={statusBadge(p.status)}>{p.status}</span>}</td>
+                        <td style={td}>{isEditing?<><button style={ab("#4caf7d")} onClick={()=>saveEdit(p)}>✓ Save</button><button style={ab("#888")} onClick={()=>setEditingId(null)}>Cancel</button></>:<><button style={ab("#c8963e")} onClick={()=>setEditingId(p.id)}>Edit</button><button style={ab("#5a9a5a")} onClick={()=>markSold(p)}>Sold</button><button style={ab("#cc4444")} onClick={()=>deleteProduct(p)}>✕</button></>}</td>
+                      </tr>
+                    );
+                  })}
+                  {filtered.length===0&&<tr><td colSpan={11} style={{textAlign:"center",padding:"40px",color:"#aaa"}}>No products found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
-      {/* Shared Adaptive Footer */}
+      {/* Shared Persistent Footer */}
       <div style={{padding:"16px 24px",background:"#f0ebe0",borderTop:"1px solid #e0d8c8",fontSize:"11px",color:"#a09a8f",textAlign:"center"}}>
         🔴 Expired · 🟠 &lt;30d · 🟡 &lt;90d · 🟢 Safe · All changes saved to Google Sheets
       </div>
