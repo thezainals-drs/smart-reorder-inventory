@@ -47,7 +47,18 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("expiry");
   const [newProduct, setNewProduct] = useState({category:"Supplement",name:"",code:"",expiry:"",qty:1,label:"",pricing:"Full Price",price:"",soldTo:"",notes:"",status:"available"});
 
-  useEffect(() => { fetchProducts(); }, []);
+  // Fixes mobile device layout scaling rules dynamically
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'viewport';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    
+    fetchProducts();
+  }, []);
 
   async function fetchProducts() {
     try {
@@ -128,47 +139,51 @@ export default function Home() {
   const td = {padding:"10px 12px",borderBottom:"1px solid #f0ebe0",verticalAlign:"middle"};
 
   return (
-    <div style={{minHeight:"100vh",background:"#f7f4ef",fontFamily:"Georgia,serif",color:"#1a1a1a",margin:0}}>
+    <div style={{minHeight:"100vh",background:"#f7f4ef",fontFamily:"Georgia,serif",color:"#1a1a1a",margin:0,width:"100%"}}>
       <style>{`
         * { box-sizing: border-box; }
-        .fscroll { display:flex; gap:6px; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
+        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
+        .fscroll { display:flex; gap:6px; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; width: 100%; }
         .fscroll::-webkit-scrollbar { display:none; }
         button:active { opacity:0.7; }
         .card-view { display:none; }
         .table-view { display:block; }
         @media (max-width: 768px) {
-          .card-view { display:flex; flex-direction:column; gap:10px; padding:10px 12px; }
+          .card-view { display:flex; flex-direction:column; gap:12px; padding:12px; width: 100%; }
           .table-view { display:none; }
           .sort-select { display:none; }
         }
       `}</style>
 
+      {/* Shared Adaptive Header */}
       <div style={{background:"#1a1a2e",color:"#f7f4ef",padding:"16px 20px",borderBottom:"4px solid #c8963e"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
-            <div style={{fontSize:"18px",fontWeight:"700",color:"#f7f4ef"}}>⚖️ Smart Reorder</div>
+            <div style={{fontSize:"18px",fontWeight:"700",color:"#f7f7f7"}}>⚖️ Smart Reorder</div>
             <div style={{fontSize:"10px",color:"#8a8aaa",letterSpacing:"2px",textTransform:"uppercase",marginTop:"2px"}}>DR's Secret · Avance {saving&&"· Saving..."}</div>
           </div>
           <button onClick={()=>setShowAddForm(!showAddForm)} style={{background:"#c8963e",color:"#fff",border:"none",borderRadius:"8px",padding:"10px 16px",fontSize:"13px",fontWeight:"700",cursor:"pointer",fontFamily:"Georgia,serif"}}>+ Add</button>
         </div>
-        <div style={{display:"flex",gap:"10px",marginTop:"14px",flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:"8px",marginTop:"14px",overflowX:"auto",paddingBottom:"4px"}} className="fscroll">
           {[[products.filter(p=>p.status!=='sold').reduce((a,p)=>a+p.qty,0),"Units","#c8963e",""],[products.filter(p=>p.category==='Skincare').length,"Skincare","#e879b8","#e879b8"],[products.filter(p=>p.category==='Supplement').length,"Supps","#7a9aef","#7a9aef"],[urgentCount,"Urgent","#ff6b6b","#ff4444"]].map(([n,l,color,border])=>(
-            <div key={l} style={{background:"rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px 14px",borderLeft:border?`3px solid ${border}`:"none"}}>
-              <div style={{fontSize:"20px",fontWeight:"700",color}}>{n}</div>
-              <div style={{fontSize:"9px",color:"#8a8aaa",letterSpacing:"2px",textTransform:"uppercase"}}>{l}</div>
+            <div key={l} style={{background:"rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px 14px",borderLeft:border?`3px solid ${border}`:"none",minWidth:"85px",flex:"1"}}>
+              <div style={{fontSize:"18px",fontWeight:"700",color}}>{n}</div>
+              <div style={{fontSize:"9px",color:"#8a8aaa",letterSpacing:"1px",textTransform:"uppercase"}}>{l}</div>
             </div>
           ))}
         </div>
       </div>
 
+      {/* Category Tab Filtration */}
       <div style={{display:"flex",background:"#f0ebe0",borderBottom:"1px solid #e0d8c8",overflowX:"auto"}}>
         {[["all","All"],["Supplement","Supplements"],["Skincare","DR's Secret"]].map(([val,label])=>(
-          <button key={val} onClick={()=>setCategoryFilter(val)} style={{flex:1,padding:"10px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:categoryFilter===val?"#1a1a2e":"#aaa",background:"transparent",border:"none",borderBottom:categoryFilter===val?"3px solid #c8963e":"3px solid transparent",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
+          <button key={val} onClick={()=>setCategoryFilter(val)} style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:categoryFilter===val?"#1a1a2e":"#aaa",background:"transparent",border:"none",borderBottom:categoryFilter===val?"3px solid #c8963e":"3px solid transparent",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
         ))}
       </div>
 
-      <div style={{padding:"10px 16px",background:"#fff",borderBottom:"1px solid #e8e0d0"}}>
-        <input style={{width:"100%",border:"1px solid #d0c8b8",borderRadius:"20px",padding:"8px 16px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#faf8f4",marginBottom:"10px"}} placeholder="Search by name or code..." value={search} onChange={e=>setSearch(e.target.value)} />
+      {/* Global Filter Toolbar */}
+      <div style={{padding:"12px 16px",background:"#fff",borderBottom:"1px solid #e8e0d0"}}>
+        <input style={{width:"100%",border:"1px solid #d0c8b8",borderRadius:"20px",padding:"10px 16px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#faf8f4",marginBottom:"10px"}} placeholder="Search by name or code..." value={search} onChange={e=>setSearch(e.target.value)} />
         <div className="fscroll">
           {[["all","All"],["urgent",`Urgent (${urgentCount})`],["available","Available"],["low","Low Stock"],["sold","Sold"]].map(([f,label])=>(
             <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?"#1a1a2e":"#f0ebe0",color:filter===f?"#fff":"#888",border:"none",borderRadius:"20px",padding:"6px 14px",fontSize:"11px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
@@ -182,10 +197,11 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Dynamic Entry Form Wrapper */}
       {showAddForm && (
         <div style={{background:"#1a1a2e",padding:"16px 20px",borderBottom:"2px solid #c8963e"}}>
           <div style={{color:"#c8963e",fontSize:"11px",letterSpacing:"3px",textTransform:"uppercase",marginBottom:"12px"}}>Add New Product</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(150px, 1fr))",gap:"10px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(140px, 1fr))",gap:"10px"}}>
             <div><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>Category</label><select style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct.category} onChange={e=>setNewProduct(p=>({...p,category:e.target.value}))}>{CATEGORY_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
             {[["name","Product Name"],["code","Product Code"],["expiry","Expiry (DD Mon YYYY)"],["qty","Qty"],["label","Batch Label"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
               <div key={field}><label style={{fontSize:"10px",letterSpacing:"2px",color:"#8a8aaa",textTransform:"uppercase",display:"block",marginBottom:"3px"}}>{label}</label><input style={{border:"1px solid #3a3a5e",borderRadius:"6px",padding:"8px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#0d0d22",color:"#f7f4ef",width:"100%"}} value={newProduct[field]} onChange={e=>setNewProduct(p=>({...p,[field]:e.target.value}))} type={field==="qty"?"number":"text"} /></div>
@@ -206,7 +222,7 @@ export default function Home() {
         <div style={{textAlign:"center",padding:"40px",color:"#cc4444",fontSize:"14px"}}>{error} <button onClick={fetchProducts} style={{marginLeft:"12px",cursor:"pointer",padding:"6px 12px",borderRadius:"6px",border:"1px solid #cc4444",background:"transparent",color:"#cc4444",fontFamily:"Georgia,serif"}}>Retry</button></div>
       ) : (
         <>
-          {/* MOBILE CARD VIEW - shown via CSS on small screens */}
+          {/* MOBILE CARD VIEW */}
           <div className="card-view">
             {filtered.length===0 && <div style={{textAlign:"center",padding:"40px",color:"#aaa"}}>No products found.</div>}
             {filtered.map(p => {
@@ -216,6 +232,8 @@ export default function Home() {
               const isEditing = editingId===p.id;
               return (
                 <div key={p.id} style={{background:"#fff",borderRadius:"12px",overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",borderLeft:`4px solid ${borderColor}`,opacity:p.status==='sold'?0.6:1}}>
+                  
+                  {/* Card Header */}
                   <div style={{padding:"12px 14px 8px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                     <div style={{flex:1}}>
                       <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"4px",flexWrap:"wrap"}}>
@@ -232,12 +250,14 @@ export default function Home() {
                       <div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>units</div>
                     </div>
                   </div>
+
+                  {/* Inline Form Modification Panel */}
                   {isEditing ? (
                     <div style={{padding:"10px 14px",background:"#faf8f4",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
                       {[["expiry","Expiry"],["qty","Qty"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
                         <div key={field}>
                           <div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>{label}</div>
-                          <input style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px 8px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p[field]} onChange={e=>updateLocal(p.id,field,field==="qty"?+e.target.value:e.target.value)} type={field==="qty"?"number":"text"} />
+                          <input style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px 8px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p[field]||""} onChange={e=>updateLocal(p.id,field,field==="qty"?+e.target.value:e.target.value)} type={field==="qty"?"number":"text"} />
                         </div>
                       ))}
                       <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"2px"}}>Pricing</div><select style={{border:"1px solid #d0c8b8",borderRadius:"6px",padding:"6px",fontSize:"12px",fontFamily:"Georgia,serif",background:"#fff",width:"100%"}} value={p.pricing} onChange={e=>updateLocal(p.id,"pricing",e.target.value)}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
@@ -251,6 +271,8 @@ export default function Home() {
                       {p.notes && <div><div style={{fontSize:"9px",color:"#aaa",textTransform:"uppercase",letterSpacing:"1px"}}>Notes</div><div style={{fontSize:"12px",color:"#888"}}>{p.notes}</div></div>}
                     </div>
                   )}
+
+                  {/* Actions Bar */}
                   <div style={{padding:"8px 14px",display:"flex",gap:"8px",borderTop:"1px solid #f0ebe0"}}>
                     {isEditing ? (
                       <>
@@ -270,7 +292,7 @@ export default function Home() {
             })}
           </div>
 
-          {/* DESKTOP TABLE VIEW - shown via CSS on large screens */}
+          {/* DESKTOP TABLE VIEW */}
           <div className="table-view" style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:"13px"}}>
               <thead>
@@ -287,12 +309,12 @@ export default function Home() {
                       <td style={td}><span style={catBadge(p.category)}>{p.category==='Skincare'?'SKIN':'SUPP'}</span></td>
                       <td style={td}><div style={{fontWeight:"600",color:"#1a1a2e"}}>{p.name}</div>{p.label&&<div style={{fontSize:"11px",color:"#aaa",marginTop:"2px"}}>{p.label}</div>}</td>
                       <td style={td}><span style={{fontSize:"11px",color:"#888",fontFamily:"monospace"}}>{p.code||"—"}</span></td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"120px"}} value={p.expiry} onChange={e=>updateLocal(p.id,"expiry",e.target.value)} />:<div><div style={{fontSize:"12px",color:"#555",marginBottom:"3px"}}>{p.expiry||"—"}</div>{p.expiry&&<span style={{background:badge.bg,color:badge.color,padding:"2px 7px",borderRadius:"3px",fontSize:"10px",fontWeight:"700",display:"inline-block"}}>{badge.label}</span>}</div>}</td>
+                      <td style={td}>{isEditing?<input style={{...inp,width:"120px"}} value={p.expiry||""} onChange={e=>updateLocal(p.id,"expiry",e.target.value)} />:<div><div style={{fontSize:"12px",color:"#555",marginBottom:"3px"}}>{p.expiry||"—"}</div>{p.expiry&&<span style={{background:badge.bg,color:badge.color,padding:"2px 7px",borderRadius:"3px",fontSize:"10px",fontWeight:"700",display:"inline-block"}}>{badge.label}</span>}</div>}</td>
                       <td style={td}>{isEditing?<input style={{...inp,width:"55px"}} type="number" value={p.qty} onChange={e=>updateLocal(p.id,"qty",+e.target.value)} />:<span style={{fontSize:"17px",fontWeight:"700",color:p.qty===0?"#cc4444":p.qty<=2?"#f0b429":"#1a1a2e"}}>{p.qty}</span>}</td>
                       <td style={td}>{isEditing?<select style={sel} value={p.pricing} onChange={e=>updateLocal(p.id,"pricing",e.target.value)}>{PRICING_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>:<span style={{fontSize:"11px",color:p.pricing==="FOC"?"#5a9a5a":p.pricing==="PWP"?"#c8963e":"#555",fontWeight:"600"}}>{p.pricing}</span>}</td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"75px"}} value={p.price} onChange={e=>updateLocal(p.id,"price",e.target.value)} />:<span>{p.price?`RM ${p.price}`:"—"}</span>}</td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"110px"}} value={p.soldTo} onChange={e=>updateLocal(p.id,"soldTo",e.target.value)} />:<span style={{color:"#555",fontSize:"12px"}}>{p.soldTo||"—"}</span>}</td>
-                      <td style={td}>{isEditing?<input style={{...inp,width:"140px"}} value={p.notes} onChange={e=>updateLocal(p.id,"notes",e.target.value)} />:<span style={{color:"#888",fontSize:"11px"}}>{p.notes||"—"}</span>}</td>
+                      <td style={td}>{isEditing?<input style={{...inp,width:"75px"}} value={p.price||""} onChange={e=>updateLocal(p.id,"price",e.target.value)} />:<span>{p.price?`RM ${p.price}`:"—"}</span>}</td>
+                      <td style={td}>{isEditing?<input style={{...inp,width:"110px"}} value={p.soldTo||""} onChange={e=>updateLocal(p.id,"soldTo",e.target.value)} />:<span style={{color:"#555",fontSize:"12px"}}>{p.soldTo||"—"}</span>}</td>
+                      <td style={td}>{isEditing?<input style={{...inp,width:"140px"}} value={p.notes||""} onChange={e=>updateLocal(p.id,"notes",e.target.value)} />:<span style={{color:"#888",fontSize:"11px"}}>{p.notes||"—"}</span>}</td>
                       <td style={td}>{isEditing?<select style={sel} value={p.status} onChange={e=>updateLocal(p.id,"status",e.target.value)}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>:<span style={statusBadge(p.status)}>{p.status}</span>}</td>
                       <td style={td}>{isEditing?<><button style={ab("#4caf7d")} onClick={()=>saveEdit(p)}>✓ Save</button><button style={ab("#888")} onClick={()=>setEditingId(null)}>Cancel</button></>:<><button style={ab("#c8963e")} onClick={()=>setEditingId(p.id)}>Edit</button><button style={ab("#5a9a5a")} onClick={()=>markSold(p)}>Sold</button><button style={ab("#cc4444")} onClick={()=>deleteProduct(p)}>✕</button></>}</td>
                     </tr>
@@ -305,7 +327,8 @@ export default function Home() {
         </>
       )}
 
-      <div style={{padding:"12px 24px",background:"#f0ebe0",borderTop:"1px solid #e0d8c8",fontSize:"11px",color:"#aaa"}}>
+      {/* Shared Adaptive Footer */}
+      <div style={{padding:"16px 24px",background:"#f0ebe0",borderTop:"1px solid #e0d8c8",fontSize:"11px",color:"#a09a8f",textAlign:"center"}}>
         🔴 Expired · 🟠 &lt;30d · 🟡 &lt;90d · 🟢 Safe · All changes saved to Google Sheets
       </div>
     </div>
