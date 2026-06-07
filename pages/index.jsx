@@ -166,7 +166,7 @@ function Home() {
 
       {/* CATEGORY TABS */}
       <div style={{display:"flex",background:"#f0ebe0",borderBottom:"1px solid #e0d8c8"}}>
-        {[["all","All"],["Supplement","Supplements"],["Skincare","DR's Secret"]].map(([val,label])=>(
+        {[["all","All"],["Supplement","Supplements"],["Skincare","Skincare"]].map(([val,label])=>(
           <button key={val} onClick={()=>setCategoryFilter(val)} style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:categoryFilter===val?"#1a1a2e":"#aaa",background:"transparent",border:"none",borderBottom:categoryFilter===val?"3px solid #c8963e":"3px solid transparent",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
         ))}
       </div>
