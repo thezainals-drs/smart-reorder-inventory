@@ -179,14 +179,12 @@ function Home() {
           {[["all","All"],["urgent",`Urgent (${urgentCount})`],["available","Available"],["low","Low Stock"],["sold","Sold"]].map(([f,label])=>(
             <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?"#1a1a2e":"#f0ebe0",color:filter===f?"#fff":"#888",border:"none",borderRadius:"20px",padding:"6px 14px",fontSize:"11px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
           ))}
-          {!isMobile && (
-            <select style={{border:"1px solid #d0c8b8",borderRadius:"20px",padding:"6px 12px",fontSize:"11px",fontFamily:"Georgia,serif",background:"#f0ebe0",marginLeft:"auto"}} value={sortBy} onChange={e=>setSortBy(e.target.value)}>
+          <select style={{border:"1px solid #d0c8b8",borderRadius:"20px",padding:"6px 12px",fontSize:"11px",fontFamily:"Georgia,serif",background:"#f0ebe0",marginLeft:"auto",flexShrink:0}} value={sortBy} onChange={e=>setSortBy(e.target.value)}>
               <option value="expiry">Sort: Expiry</option>
               <option value="name">Sort: Name</option>
               <option value="qty">Sort: Qty</option>
               <option value="category">Sort: Category</option>
             </select>
-          )}
         </div>
       </div>
 
