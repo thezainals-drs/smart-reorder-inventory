@@ -35,7 +35,7 @@ function expiryBadge(days) {
 const PRICING_OPTIONS = ["Full Price","PWP","FOC"];
 const STATUS_OPTIONS = ["available","sold","reserved","low"];
 
-function Home() {
+function Skincare() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,10 +59,10 @@ function Home() {
   async function fetchProducts() {
     try {
       setLoading(true);
-      const res = await fetch('/api/inventory');
+      const res = await fetch('/api/skincare');
       const data = await res.json();
       if (Array.isArray(data)) setProducts(data);
-      else setError('Could not load inventory.');
+      else setError('Could not load skincare inventory.');
     } catch(e) { setError('Could not connect to database.'); }
     finally { setLoading(false); }
   }
@@ -70,7 +70,7 @@ function Home() {
   async function addProduct() {
     setSaving(true);
     try {
-      await fetch('/api/inventory', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(newProduct) });
+      await fetch('/api/skincare', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(newProduct) });
       setNewProduct({name:"",code:"",expiry:"",qty:1,label:"",pricing:"Full Price",price:"",soldTo:"",notes:"",status:"available"});
       setShowAddForm(false);
       await fetchProducts();
@@ -81,7 +81,7 @@ function Home() {
   async function saveEdit(p) {
     setSaving(true);
     try {
-      await fetch('/api/inventory', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p) });
+      await fetch('/api/skincare', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p) });
       setEditingId(null);
       await fetchProducts();
     } catch(e) { setError('Could not save.'); }
@@ -91,7 +91,7 @@ function Home() {
   async function markSold(p) {
     setSaving(true);
     try {
-      await fetch('/api/inventory', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...p, status:'sold', qty:Math.max(0,p.qty-1)}) });
+      await fetch('/api/skincare', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...p, status:'sold', qty:Math.max(0,p.qty-1)}) });
       await fetchProducts();
     } catch(e) { setError('Could not save.'); }
     finally { setSaving(false); }
@@ -101,7 +101,7 @@ function Home() {
     if (!confirm('Delete this product?')) return;
     setSaving(true);
     try {
-      await fetch('/api/inventory', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({_rowIndex:p._rowIndex}) });
+      await fetch('/api/skincare', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({_rowIndex:p._rowIndex}) });
       await fetchProducts();
     } catch(e) { setError('Could not delete.'); }
     finally { setSaving(false); }
@@ -144,16 +144,16 @@ function Home() {
       `}</style>
 
       {/* HEADER */}
-      <div style={{background:"#1a1a2e",color:"#f7f4ef",padding:"16px 20px",borderBottom:"4px solid #c8963e"}}>
+      <div style={{background:"#1a1a2e",color:"#f7f4ef",padding:"16px 20px",borderBottom:"4px solid #e879b8"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
             <div style={{fontSize:"18px",fontWeight:"700",color:"#f7f4ef"}}>Farah's Skincare and Supplement Inventory</div>
-            <div style={{fontSize:"10px",color:"#8a8aaa",letterSpacing:"2px",textTransform:"uppercase",marginTop:"2px"}}>Avance · Optrimax {saving&&"· Saving..."}</div>
+            <div style={{fontSize:"10px",color:"#8a8aaa",letterSpacing:"2px",textTransform:"uppercase",marginTop:"2px"}}>DR's Secret {saving&&"· Saving..."}</div>
           </div>
-          <button onClick={()=>setShowAddForm(!showAddForm)} style={{background:"#c8963e",color:"#fff",border:"none",borderRadius:"8px",padding:"10px 16px",fontSize:"13px",fontWeight:"700",cursor:"pointer",fontFamily:"Georgia,serif"}}>+ Add</button>
+          <button onClick={()=>setShowAddForm(!showAddForm)} style={{background:"#e879b8",color:"#fff",border:"none",borderRadius:"8px",padding:"10px 16px",fontSize:"13px",fontWeight:"700",cursor:"pointer",fontFamily:"Georgia,serif"}}>+ Add</button>
         </div>
         <div className="fscroll" style={{marginTop:"14px"}}>
-          {[[products.filter(p=>p.status!=='sold').reduce((a,p)=>a+p.qty,0),"Units","#c8963e",""],[urgentCount,"Urgent","#ff6b6b","#ff4444"],[products.filter(p=>p.status==='sold').length,"Sold","#4caf7d","#4caf7d"]].map(([n,l,color,border])=>(
+          {[[products.filter(p=>p.status!=='sold').reduce((a,p)=>a+p.qty,0),"Units","#e879b8",""],[urgentCount,"Urgent","#ff6b6b","#ff4444"],[products.filter(p=>p.status==='sold').length,"Sold","#4caf7d","#4caf7d"]].map(([n,l,color,border])=>(
             <div key={l} style={{background:"rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px 14px",borderLeft:border?`3px solid ${border}`:"none",minWidth:"85px",flex:"1"}}>
               <div style={{fontSize:"18px",fontWeight:"700",color}}>{n}</div>
               <div style={{fontSize:"9px",color:"#8a8aaa",letterSpacing:"1px",textTransform:"uppercase"}}>{l}</div>
@@ -164,13 +164,13 @@ function Home() {
 
       {/* NAV TABS */}
       <div style={{display:"flex",background:"#f0ebe0",borderBottom:"1px solid #e0d8c8"}}>
-        <Link href="/" style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:"#1a1a2e",borderBottom:"3px solid #c8963e",display:"block",fontFamily:"Georgia,serif"}}>Supplements</Link>
-        <Link href="/skincare" style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:"#aaa",borderBottom:"3px solid transparent",display:"block",fontFamily:"Georgia,serif"}}>Skincare</Link>
+        <Link href="/" style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:"#aaa",borderBottom:"3px solid transparent",display:"block",fontFamily:"Georgia,serif"}}>Supplements</Link>
+        <Link href="/skincare" style={{flex:1,padding:"12px 8px",textAlign:"center",fontSize:"11px",fontWeight:"700",letterSpacing:"1px",textTransform:"uppercase",color:"#1a1a2e",borderBottom:"3px solid #e879b8",display:"block",fontFamily:"Georgia,serif"}}>Skincare</Link>
       </div>
 
       {/* CONTROLS */}
       <div style={{padding:"12px 16px",background:"#fff",borderBottom:"1px solid #e8e0d0"}}>
-        <input style={{width:"100%",border:"1px solid #d0c8b8",borderRadius:"20px",padding:"10px 16px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#faf8f4",marginBottom:"10px"}} placeholder="Search supplements..." value={search} onChange={e=>setSearch(e.target.value)} />
+        <input style={{width:"100%",border:"1px solid #d0c8b8",borderRadius:"20px",padding:"10px 16px",fontSize:"13px",fontFamily:"Georgia,serif",background:"#faf8f4",marginBottom:"10px"}} placeholder="Search skincare products..." value={search} onChange={e=>setSearch(e.target.value)} />
         <div className="fscroll">
           {[["all","All"],["urgent",`Urgent (${urgentCount})`],["available","Available"],["low","Low Stock"],["sold","Sold"]].map(([f,label])=>(
             <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?"#1a1a2e":"#f0ebe0",color:filter===f?"#fff":"#888",border:"none",borderRadius:"20px",padding:"6px 14px",fontSize:"11px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif",whiteSpace:"nowrap"}}>{label}</button>
@@ -185,8 +185,8 @@ function Home() {
 
       {/* ADD FORM */}
       {showAddForm && (
-        <div style={{background:"#1a1a2e",padding:"16px 20px",borderBottom:"2px solid #c8963e"}}>
-          <div style={{color:"#c8963e",fontSize:"11px",letterSpacing:"3px",textTransform:"uppercase",marginBottom:"12px"}}>Add New Supplement</div>
+        <div style={{background:"#1a1a2e",padding:"16px 20px",borderBottom:"2px solid #e879b8"}}>
+          <div style={{color:"#e879b8",fontSize:"11px",letterSpacing:"3px",textTransform:"uppercase",marginBottom:"12px"}}>Add New Skincare Product</div>
           <div style={{display:"flex",flexDirection:isMobile?"column":"row",flexWrap:"wrap",gap:"10px"}}>
             {[["name","Product Name"],["code","Product Code"],["expiry","Expiry (DD Mon YYYY)"],["qty","Qty"],["label","Batch Label"],["price","Price (RM)"],["soldTo","Sold To"],["notes","Notes"]].map(([field,label])=>(
               <div key={field} style={{flex:isMobile?"1 1 100%":"1 1 200px"}}>
@@ -204,7 +204,7 @@ function Home() {
             </div>
           </div>
           <div style={{display:"flex",gap:"10px",marginTop:"14px"}}>
-            <button onClick={addProduct} style={{background:"#c8963e",color:"#fff",border:"none",padding:"10px 24px",fontSize:"13px",fontWeight:"700",cursor:"pointer",borderRadius:"8px",fontFamily:"Georgia,serif"}}>Save to Google Sheets</button>
+            <button onClick={addProduct} style={{background:"#e879b8",color:"#fff",border:"none",padding:"10px 24px",fontSize:"13px",fontWeight:"700",cursor:"pointer",borderRadius:"8px",fontFamily:"Georgia,serif"}}>Save to Google Sheets</button>
             <button onClick={()=>setShowAddForm(false)} style={{background:"transparent",color:"#8a8aaa",border:"1px solid #3a3a5e",padding:"10px 16px",fontSize:"13px",cursor:"pointer",borderRadius:"8px",fontFamily:"Georgia,serif"}}>Cancel</button>
           </div>
         </div>
@@ -212,7 +212,7 @@ function Home() {
 
       {/* MAIN CONTENT */}
       {loading ? (
-        <div style={{textAlign:"center",padding:"60px",color:"#888",fontSize:"14px"}}>Loading supplements from Google Sheets...</div>
+        <div style={{textAlign:"center",padding:"60px",color:"#888",fontSize:"14px"}}>Loading skincare from Google Sheets...</div>
       ) : error ? (
         <div style={{textAlign:"center",padding:"40px",color:"#cc4444",fontSize:"14px"}}>{error}<button onClick={fetchProducts} style={{marginLeft:"12px",cursor:"pointer",padding:"6px 12px",borderRadius:"6px",border:"1px solid #cc4444",background:"transparent",color:"#cc4444",fontFamily:"Georgia,serif"}}>Retry</button></div>
       ) : isMobile ? (
@@ -221,7 +221,7 @@ function Home() {
           {filtered.map(p => {
             const days = daysUntilExpiry(p.expiry);
             const badge = expiryBadge(days);
-            const borderColor = days!==null&&days<0?"#ff4444":days!==null&&days<=30?"#ff6b35":days!==null&&days<=90?"#f0b429":"#e0d8c8";
+            const borderColor = days!==null&&days<0?"#ff4444":days!==null&&days<=30?"#ff6b35":days!==null&&days<=90?"#f0b429":"#e879b8";
             const isEditing = editingId===p.id;
             return (
               <div key={p.id} style={{background:"#fff",borderRadius:"12px",overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",borderLeft:`4px solid ${borderColor}`,opacity:p.status==='sold'?0.6:1,width:"100%"}}>
@@ -267,7 +267,7 @@ function Home() {
                     </>
                   ) : (
                     <>
-                      <button onClick={()=>setEditingId(p.id)} style={{flex:1,background:"transparent",border:"1px solid #c8963e",color:"#c8963e",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>Edit</button>
+                      <button onClick={()=>setEditingId(p.id)} style={{flex:1,background:"transparent",border:"1px solid #e879b8",color:"#e879b8",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>Edit</button>
                       <button onClick={()=>markSold(p)} style={{flex:2,background:"#5a9a5a",border:"none",color:"#fff",borderRadius:"8px",padding:"8px",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"Georgia,serif"}}>Mark Sold</button>
                       <button onClick={()=>deleteProduct(p)} style={{background:"transparent",border:"1px solid #cc4444",color:"#cc4444",borderRadius:"8px",padding:"8px 10px",fontSize:"12px",cursor:"pointer",fontFamily:"Georgia,serif"}}>✕</button>
                     </>
@@ -300,7 +300,7 @@ function Home() {
                     <td style={td}>{isEditing?<input style={{...inp,width:"110px"}} value={p.soldTo||""} onChange={e=>updateLocal(p.id,"soldTo",e.target.value)} />:<span style={{color:"#555",fontSize:"12px"}}>{p.soldTo||"—"}</span>}</td>
                     <td style={td}>{isEditing?<input style={{...inp,width:"140px"}} value={p.notes||""} onChange={e=>updateLocal(p.id,"notes",e.target.value)} />:<span style={{color:"#888",fontSize:"11px"}}>{p.notes||"—"}</span>}</td>
                     <td style={td}>{isEditing?<select style={sel} value={p.status} onChange={e=>updateLocal(p.id,"status",e.target.value)}>{STATUS_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>:<span style={statusBadge(p.status)}>{p.status}</span>}</td>
-                    <td style={td}>{isEditing?<><button style={ab("#4caf7d")} onClick={()=>saveEdit(p)}>✓ Save</button><button style={ab("#888")} onClick={()=>setEditingId(null)}>Cancel</button></>:<><button style={ab("#c8963e")} onClick={()=>setEditingId(p.id)}>Edit</button><button style={ab("#5a9a5a")} onClick={()=>markSold(p)}>Sold</button><button style={ab("#cc4444")} onClick={()=>deleteProduct(p)}>✕</button></>}</td>
+                    <td style={td}>{isEditing?<><button style={ab("#4caf7d")} onClick={()=>saveEdit(p)}>✓ Save</button><button style={ab("#888")} onClick={()=>setEditingId(null)}>Cancel</button></>:<><button style={ab("#e879b8")} onClick={()=>setEditingId(p.id)}>Edit</button><button style={ab("#5a9a5a")} onClick={()=>markSold(p)}>Sold</button><button style={ab("#cc4444")} onClick={()=>deleteProduct(p)}>✕</button></>}</td>
                   </tr>
                 );
               })}
@@ -317,4 +317,4 @@ function Home() {
   );
 }
 
-export default dynamic(() => Promise.resolve(Home), { ssr: false });
+export default dynamic(() => Promise.resolve(Skincare), { ssr: false });
